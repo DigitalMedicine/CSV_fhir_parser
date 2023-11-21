@@ -60,6 +60,8 @@ var client = mkFhir({
     baseUrl: 'http://hapi.fhir.org/baseR4'
 });
 
+
+
 client
     .search( {type: 'Patient', query: { 'birthdate': '1974' }})
     .then(function(res){
@@ -78,21 +80,23 @@ client
             console.log('Error', res.message);
         }
     });
+    
 
 
+var pat1
 readCSV().then((data) => {
-    var pat1 = createFhirPatient(data[0]);
+    pat1 = createFhirPatient(data[0]);
     console.log(pat1);
 
-    //create a FHIR patient resource from the json patient, need to check generated
-    client.create(pat1, 
-        function(entry){
-            console.log(entry.id)
-            console.log("success")
-         },
-         function(error){
-           console.error(error)
-           console.log("error")
-         }    
-    )
 });
+
+/*
+client
+    .create(pat1,
+        function(pat1){
+            console.log(pat1.id)
+        },
+        function(error){
+            console.error(error)
+        }
+    )*/
