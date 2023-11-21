@@ -11,5 +11,5 @@ var parser = parse({delimiter: ','}, function(err, data){
 });
 
 function createPatient(line,callback){
-
+    let newPatientJson
 }
