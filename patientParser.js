@@ -1,7 +1,6 @@
-//load the patients.csv file
 var fs = require('fs');
 const csv = require('csv-parser');
-var mkFhir = require('fhir.js');
+var adapter = require('./adapter.js');
 
 const readCSV = async () => {
     const results = [];
@@ -13,11 +12,12 @@ const readCSV = async () => {
     });
 }
 
+
 //create a FHIR patient resource from the json patient, need to check generated
 function createFhirPatient(jsonPatient){
     const patient = {
         "resourceType": "Patient",
-        "id": jsonPatient.id,
+        "id": jsonPatient.Id,
         "meta": {
             "profile": [ "http://hl7.org/fhir/us/core/StructureDefinition/us-core-patient" ]
         },
@@ -29,39 +29,45 @@ function createFhirPatient(jsonPatient){
         "name": [
             {
                 "use": "official",
-                "text": jsonPatient.first + " " + jsonPatient.last,
-                "family": jsonPatient.last,
+                "text": jsonPatient.FIRST + " " + jsonPatient.LAST,
+                "family": jsonPatient.LAST,
                 "given": [
-                    jsonPatient.first
+                    jsonPatient.FIRST
                 ],
                 "prefix": [
-                    jsonPatient.prefix
+                    jsonPatient.PREFIX
                 ],
                 "suffix": [
-                    jsonPatient.suffix
+                    jsonPatient.SUFFIX
                 ],
                 "period": {
-                    "start": jsonPatient.birthDate,
-                    "end": jsonPatient.deathDate
+                    "start": jsonPatient.BIRTHDATE,
+                    "end": jsonPatient.DEATHDATE
                 }
             }
         ],
 
     };
 
-    return patient;
+    let resource = {
+        "resource": patient
+    }
+
+    return resource;
+}
+
+var config = {
+    baseUrl: 'http://hapi.fhir.org/baseR4'
 }
 
 
-
-
 //create a FHIR client
-var client = mkFhir({
-    baseUrl: 'http://hapi.fhir.org/baseR4'
-});
+var client = fhir(config, adapter);
 
 
 
+
+/*
 client
     .search( {type: 'Patient', query: { 'birthdate': '1974' }})
     .then(function(res){
@@ -80,23 +86,42 @@ client
             console.log('Error', res.message);
         }
     });
-    
+    */
 
+// ... (your existing code)
+test = fhir.read({type: 'Patient', patient: '8673ee4f-e2ab-4077-ba55-4980f408773e'})
+console.log(test);
 
-var pat1
 readCSV().then((data) => {
-    pat1 = createFhirPatient(data[0]);
+    const pat1 = createFhirPatient(data[0]);
     console.log(pat1);
-
+    
+    // Use a Promise to ensure that the subsequent code is executed after client.create
+    new Promise((resolve, reject) => {
+        client.create(
+            pat1,
+            function (createdPatient) {
+                console.log("culo");
+                console.log(createdPatient.id);
+                resolve(createdPatient.id); // Resolve with the created patient ID
+            },
+            function (error) {
+                console.error("Error in create operation:", error);
+                reject(error);
+            }
+        );
+    })
+    .then((createdPatientId) => {
+        // Continue with the rest of your code here
+        return client.search({ type: 'Patient', query: { 'id': createdPatientId } });
+    })
+    .then((res) => {
+        var bundle = res.data;
+        console.log(bundle);
+    })
+    .catch((error) => {
+        // Error handling for the entire chain of operations
+        console.error("Error in the entire chain:", error);
+    });
 });
 
-/*
-client
-    .create(pat1,
-        function(pat1){
-            console.log(pat1.id)
-        },
-        function(error){
-            console.error(error)
-        }
-    )*/
