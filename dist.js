@@ -64,18 +64,11 @@
 	}
 
 	window.getPatients = function (page = 1, limit = 5) {
+		alert("culo")
 	  const pDoc = document.querySelector('#pagination');
 	  const ptDoc = document.querySelector('#patients');
-	  client.search({
-	    type: 'Patient',
-	    query: {
-	      _count: limit,
-	      _page: page,
-	      $include: {
-	        RelatedPerson: "patient"
-	      }
-	    }
-	  })
+	  client
+	  	.search( {type: 'Patient', query: { 'birthdate': '1974' }})
 	    .then((res) => {
 	      const bundle = res.data;
 	      ptDoc.innerHTML = '';
